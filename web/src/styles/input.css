@@ -1,0 +1,17 @@
+.agent_input {
+    width: 528px;
+    height: 50px;
+    border-radius: 5px;
+    border: 1px solid #01FDB2;
+    background-color: transparent;
+    font-size: 24px;
+    font-weight: 400;
+    color: white;
+    padding-left: 27px;
+    padding-right: 27px;
+    margin-top: 15px;
+}
+.agent_input:focus {
+    outline: none;
+    border: 1px solid #01FDB2;
+}

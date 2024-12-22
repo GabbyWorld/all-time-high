@@ -1,0 +1,33 @@
+.tb_container {
+
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+
+}
+.tb_header {
+    color: #fff;
+    font-size: 16px;
+}
+.tb_row {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.tb_cell {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-collapse: collapse;
+
+}
+
+.tb_bd1 {
+    border: 1px solid #4E4E4E;
+}
+.tb_td_h{ 
+    height: 50px;
+}

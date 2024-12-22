@@ -1,0 +1,28 @@
+/* 针对 Webkit 浏览器 */
+.scrollable::-webkit-scrollbar {
+    /* width: 10px;
+    height: 10px; */
+    width: 7px;
+    border-radius: 15px;
+  }
+  
+.scrollable::-webkit-scrollbar-track {
+    background: green;
+    border-radius: 5px;
+  }
+  
+  .scrollable::-webkit-scrollbar-thumb {
+    background: blue;
+    border-radius: 5px;
+  }
+  
+  .scrollable::-webkit-scrollbar-thumb:hover {
+    background: red;
+  }
+  
+  /* 针对 Firefox */
+  body {
+    scrollbar-color: yellow pink;
+    scrollbar-width: thin;
+  }
+  

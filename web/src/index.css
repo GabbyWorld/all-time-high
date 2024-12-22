@@ -1,0 +1,48 @@
+@import './styles/animation.css';
+@import './styles/colors.css';
+@import './styles/common.css';
+@import './styles/font.css';
+@import './styles/layout.css';
+@import './styles/table.css';
+@import './styles/input.css';
+@import './styles/scrollbar.css';
+
+
+
+* {
+  font-family: 'futura'
+}
+/* 按钮、标题都是qlorie，所有内容都是futura */
+@font-face {
+  font-family: 'futura';
+  src: url('./assets/fonts/futura.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'qlorie';
+  src: url('./assets/fonts/qlorie.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+
+
+html {
+  height: 100%;
+  width: 100%;
+  
+}
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #16141F !important;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
