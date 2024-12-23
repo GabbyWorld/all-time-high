@@ -1,20 +1,20 @@
-# All Time High - Go Web Backend & React Frontend
+# All Time High
 
-Welcome to **All Time High**, a cutting-edge web application designed to provide a seamless experience for users interacting with the Solana blockchain. This repository showcases a robust Go-based backend and a dynamic React frontend, making it perfect for your next hackathon!
+Welcome to **All Time High**, a revolutionary Web3 application designed to empower users with seamless interactions on the Solana blockchain. This repository showcases a robust Go-based backend and a dynamic React frontend, making it the perfect project for your next Web3 hackathon!
 
 ## 🚀 Project Overview
 
 ### Backend
-- **Built with Go**: Utilizing the Gin framework for high performance.
-- **Data Management**: PostgreSQL for data storage, with GORM as the ORM for efficient database interactions.
-- **Configuration**: Managed by Viper for easy environment variable handling.
-- **User Authentication**: Integrates Phantom wallet for secure user authentication and manages sessions with JWT.
+- **Built with Go**: Leveraging the Gin framework for high performance and scalability.
+- **Decentralized Data Management**: PostgreSQL for data storage, with GORM as the ORM for efficient database interactions.
+- **Environment Configuration**: Managed by Viper for easy handling of environment variables.
+- **Secure User Authentication**: Integrates Phantom wallet for secure, decentralized user authentication and manages sessions with JWT.
 - **API Documentation**: Auto-generated Swagger docs for easy endpoint reference and testing.
 
 ### Frontend
-- **React & TypeScript**: A modern frontend built with React, bundled by Vite for fast development.
-- **UI Components**: Utilizes Chakra UI for a responsive and accessible user interface.
-- **Seamless Integration**: Facilitates Phantom wallet integration for a smooth Solana-based experience.
+- **React & TypeScript**: A modern frontend built with React, bundled by Vite for rapid development.
+- **Responsive UI Components**: Utilizes Chakra UI for an accessible and user-friendly interface.
+- **Seamless Web3 Integration**: Facilitates Phantom wallet integration for a smooth, blockchain-based user experience.
 
 ## 📋 Prerequisites
 
@@ -26,7 +26,7 @@ To get started, ensure you have the following installed:
 
 ## 🏁 Getting Started
 
-Follow these steps to set up the project locally:
+Follow these steps to set up the project locally and dive into the Web3 world:
 
 1. **Clone the repository**:
    ```bash
@@ -82,7 +82,7 @@ A sample Dockerfile is provided for the Go backend. You can build and run it as 
 
 ## 🎉 Contributing
 
-We welcome contributions! Feel free to submit issues or pull requests to help improve the project.
+We welcome contributions from the Web3 community! Feel free to submit issues or pull requests to help enhance the project.
 
 ## 📄 License
 
@@ -90,4 +90,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Thank you for checking out **All Time High**! We hope you enjoy using it as much as we enjoyed building it. Good luck at the hackathon!
+Thank you for checking out **All Time High**! We hope you enjoy using it as much as we enjoyed building it. Let's revolutionize the Web3 space together!
