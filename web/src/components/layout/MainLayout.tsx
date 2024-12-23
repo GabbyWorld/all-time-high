@@ -13,7 +13,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <Box className="w100 h100">
-      <Box className="w100 h100" maxW={PAGE_MAX_WIDTH} minW={PAGE_MIN_WIDTH} >
+      <Box className="w100 h100" border="1px solid transparent" maxW={PAGE_MAX_WIDTH} minW={PAGE_MIN_WIDTH} >
         { children }
       </Box>
       <Notification 
@@ -22,5 +22,5 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
         title={title}
       />
     </Box>
-  );
-};
+  )
+}

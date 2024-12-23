@@ -1,4 +1,4 @@
-import { iConnectWalletReturn, iAgentReturn } from '@/types'
+import { iConnectWalletReturn, iAgentReturn, iBattleItemReturn, iBattlesReturn } from '@/types'
 import { get, post } from './base'
 
 export const connectWalletApi = ( wallet_address: string) => {
@@ -19,4 +19,12 @@ export const userAgentsApi = () => {
 export const allAgentsApi = (page: number, page_size: number) => {
     return get<{ agents: iAgentReturn[], page: number, page_size: number, total: number }>(`/agents/all`,{ page, page_size })
 }
+
+export const battlesApi = (agent_id: number) => {
+    return get<iBattlesReturn>(`/battles`,{ agent_id })
+}
+export const battleApi = (id: number) => {
+    return get<iBattleItemReturn>(`/battle`,{ id })
+}
+
 

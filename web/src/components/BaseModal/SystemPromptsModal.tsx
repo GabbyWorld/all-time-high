@@ -1,8 +1,7 @@
-import type { FC } from "react";
-import React, {useState, useEffect, useCallback } from "react";
-
-import { Box, Image, Text, Modal, ModalOverlay, ModalContent, ModalBody } from "@chakra-ui/react";
-import { GeneralButton, ConnectWallet }  from '@/components'
+import type { FC } from "react"
+import React from "react"
+import { Box, Image, Text, Modal, ModalOverlay, ModalContent, ModalBody } from "@chakra-ui/react"
+import { GeneralButton }  from '@/components'
 import { Kline3Img, Kline1Img } from '@/assets/images'
 
 export const SystemPromptsModal: FC<{ visible: boolean, onClose: () => void }> = ({ visible, onClose }) => {
@@ -10,7 +9,7 @@ export const SystemPromptsModal: FC<{ visible: boolean, onClose: () => void }> =
   return (
     <Modal isOpen={visible} onClose={onClose} isCentered>
         <ModalOverlay />
-        <ModalContent w="1052px"  borderRadius="5px" border='1px solid #01FDB2' bgColor='#16141F'>
+        <ModalContent w="1052px" maxWidth="none"  borderRadius="5px" border='1px solid #01FDB2' bgColor='#16141F'>
             <ModalBody className="fx-col ai-ct">
                 <Box className="fx-row ai-ct">
                     <Text className="main fz32 fw700" ml="15px">system prompts</Text>

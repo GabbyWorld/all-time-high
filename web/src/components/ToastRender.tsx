@@ -41,5 +41,5 @@ export const showToast = (title: string, status: 'success' | 'warning') => {
         title,
         status,
         render: (props) => <ToastRender props={props} />,
-    });
-};
+    })
+}

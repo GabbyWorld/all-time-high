@@ -1,5 +1,4 @@
 import React, { FC, useState } from "react"
-
 import { Web3ReactProvider, initializeConnector, Web3ReactHooks } from '@web3-react/core'
 import { Connector, Web3ReactStore } from '@web3-react/types'
 import { Phantom } from 'web3-react-phantom'
@@ -24,9 +23,7 @@ export const SOLProvider:FC<{children: React.ReactNode}> = ( { children }) => {
         <Web3ReactProvider connectors={connections}>
             <ConnectionProvider endpoint={import.meta.env.VITE_ENDPOINT}> 
                   <WalletProvider wallets={wallets as any} autoConnect>
-             
-                        { children }
-                
+                    { children }    
                   </WalletProvider>
             </ConnectionProvider>
       </Web3ReactProvider>

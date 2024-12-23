@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { homeReducer } from './reducer'
+import { agentReducer } from './reducer'
 
 export const store = configureStore({
   reducer: {
-    homeReducer
+    agentReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

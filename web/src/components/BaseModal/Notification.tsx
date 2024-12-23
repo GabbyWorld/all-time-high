@@ -14,7 +14,7 @@ export const Notification: FC<iNotification> = ({ visible, onClose, title }) => 
   return (
         <Modal isOpen={visible} onClose={onClose} isCentered>
             <ModalOverlay />
-            <ModalContent w="730px"  borderRadius="5px" border='1px solid #01FDB2' bgColor='#16141F'>
+            <ModalContent w="730px" pt="100px" pb="30px" maxWidth="none" borderRadius="5px" border='1px solid #01FDB2' bgColor='#16141F'>
                 <ModalBody className="fx-col ai-ct">
                     <Box className="fx-row ai-ct">
                         <Image src={Kline3Img } w="17px" h="49px"/>

@@ -1,8 +1,5 @@
-
-
-
-import React from "react";
-import { Box, Image, Text } from "@chakra-ui/react";
+import React from "react"
+import { Box, Image, Text } from "@chakra-ui/react"
 import { ClickButtonWrapper } from './ClickButtonWrapper'
 import { ArrowLeftImg } from '@/assets/images'
 

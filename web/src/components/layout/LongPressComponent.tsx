@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef } from 'react'
 
 interface LongPressComponentProps {
   onLongPress: () => void;
@@ -30,7 +30,7 @@ export const LongPressComponent: React.FC<LongPressComponentProps> = ({ onLongPr
     >
       {children}
     </div>
-  );
-};
+  )
+}
 
 

@@ -1,13 +1,12 @@
-import type { FC, ChangeEventHandler } from "react";
-import React, {useState,  } from "react";
-
-import { Box, Text, Image } from "@chakra-ui/react";
+import type { FC } from "react"
+import React, {useState,  } from "react"
+import { Box, Text, Image } from "@chakra-ui/react"
 import { ArrowLeftImg, Kline3Img } from '@/assets/images'
-import { GeneralButton, Notification, BackButton} from "@/components";
+import { GeneralButton, Notification, BackButton} from "@/components"
 import { cteateAgentApi } from "@/api"
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { notificationInfoAction, selectWalletInfo } from "@/redux/reducer";
-import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { notificationInfoAction, selectWalletInfo } from "@/redux/reducer"
+import { useNavigate } from "react-router-dom"
 
 interface iInput {
     value: string
@@ -142,7 +141,7 @@ export const CreateAgent: FC = () => {
                 <GeneralButton 
                     disable={name.disable || ticker.disable || prompt.disable}
                     loading={loading}
-                    style={{ width: '528px', height: '50px', marginTop: '100px' }}
+                    style={{ width: '528px', height: '50px', marginTop: '86px' }}
                     title="generate agent & create coin"  // generate agent & create coin for 0.05 SOL
                     onClick={onGenerate}/>
             </Box>
@@ -156,8 +155,8 @@ export const CreateAgent: FC = () => {
                 title={modal.title}
             />
         </Box>
-    );
-};
+    )
+}
 
 interface iCreateInput {
     title: string
@@ -172,13 +171,13 @@ const CreateInput:FC<iCreateInput> = ({
     currentLen
 }) => {
     return (
-        <Box mb="40px" className=" fx-col ai-start"> 
+        <Box mb="26px" className=" fx-col ai-start"> 
             <Box className="fx-row ai-ct">
                 <Image src={Kline3Img} h="49px" w="17px"/>
                 <Text className="fz32 main fw700" ml="10px">{title}</Text>
             </Box>
             { children }
-            <Box className="fx-row ai-ct jc-sb w100" h="14px" mt="-14px">
+            <Box className="fx-row ai-ct jc-sb w100" h="14px" >
                 <Box />
                 <Box  >
                     { currentLen > maxLen && <span className="fz12 red mr10">{maxLen} characters max</span>}

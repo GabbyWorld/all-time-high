@@ -12,7 +12,7 @@
   }
   
   .scrollable::-webkit-scrollbar-thumb {
-    background: blue;
+    /* background: blue; */
     border-radius: 5px;
   }
   

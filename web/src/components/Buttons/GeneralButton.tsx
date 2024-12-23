@@ -2,9 +2,8 @@
 
 
 import React from "react";
-import { Flex, Box, Spinner, Text } from "@chakra-ui/react";
+import { Box, Spinner, Text } from "@chakra-ui/react";
 import { ClickButtonWrapper } from './ClickButtonWrapper'
-
 
 interface iGeneralButton {
   loading?: boolean;
@@ -30,8 +29,6 @@ export const GeneralButton: React.FC<iGeneralButton> = ({
       onClick()
     }
   }
-
-
 
   return (
     <ClickButtonWrapper onClick={handleClick} disable={disable} clickableDisabled={true}> 

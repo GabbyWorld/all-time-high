@@ -1,10 +1,9 @@
 
 
 
-import React, { useState } from "react";
-import { Image, Text, Box } from "@chakra-ui/react";
+import React from "react"
+import { Image, Text, Box } from "@chakra-ui/react"
 import { Kline3Img } from "@/assets/images"
-
 
 interface iLeaderboard {
   
@@ -29,7 +28,7 @@ export const Leaderboard: React.FC<iLeaderboard> = ({
                 <Text className="fz32 fw700 main" ml="15px">leaderboard</Text>
             </Box>
             <Box className="w100 h100 center">
-                <Text className="fz16 gray9">comming soon</Text>
+                <Text className="fz16 gray9">coming soon</Text>
             </Box>
         </Box>
     );

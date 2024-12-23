@@ -1,42 +1,54 @@
-import React, { useState, useEffect } from "react";
-import { Flex, Image, Text, Box } from "@chakra-ui/react";
-import { ClickButtonWrapper, GeneralButton } from '@/components'
-import { Kline1Img, Kline3Img, CloseImg } from "@/assets/images"
-import { formatTimeAgo } from "@/utils/tool";
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import "./BattleLogs.css"; 
+import React, { useEffect, useState } from "react"
+import { Image, Text, Box } from "@chakra-ui/react"
+import { TextPopover } from '@/components'
+import {  Kline3Img, CloseImg } from "@/assets/images"
+import { createTimeAgo, localDate2UTC } from "@/utils/tool"
+import { CSSTransition, TransitionGroup } from 'react-transition-group'
+import { iBattleItemReturn, iBattlesReturn } from "@/types"
+import "./BattleLogs.css"
+import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { lastBattleLogTableAction, selectLastBattleLogTable } from "@/redux/reducer"
 
 interface iExpandTable {
     onCollapse: () => void
+    detail: iBattlesReturn | null
+    agentId: number | null
 }
 
 export const ExpandTable: React.FC<iExpandTable> = ({
-    onCollapse
+    onCollapse,
+    detail,
+    agentId
 }) => {
-    const [list, setList] = useState([
-        {time: Date.now(), UTC: '2024/12/07·12:34:56', attacker: 'attacker1', defender: 'defender1', winner: 'winner1', loser: 'loser1', result: 'result1', battleDescription: '111'},
-    ])
+    
+    if(detail === null) {
+        return null 
+    }
+    const [battlesList, setBattlesList] = useState<iBattleItemReturn[]>([])
+    const lastBattleLogTable = useAppSelector(selectLastBattleLogTable)
 
+    const { losses, total, win_rate, wins, battles} = detail
+    const dispatch = useAppDispatch()
 
     useEffect(() => {
-        const interval = setInterval(() => {
-          const newEntry = {
-            time: Date.now(),
-            UTC: new Date().toISOString().replace("T", "·").slice(0, -5),
-            attacker: `attacker${Math.floor(Math.random() * 100)}`,
-            defender: `defender${Math.floor(Math.random() * 100)}`,
-            winner: `winner${Math.floor(Math.random() * 100)}`,
-            loser: `loser${Math.floor(Math.random() * 100)}`,
-            result: `result${Math.floor(Math.random() * 100)}`,
-            battleDescription: `${Math.floor(Math.random() * 1000)}`,
-          };
-          setList((prevList) => [newEntry, ...prevList]);
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+        if(battles && !!battles.length) {
+            setBattlesList(battles)
+        }
+    },[battles])
 
+    useEffect(() => {
+        if(lastBattleLogTable) {
+            if(lastBattleLogTable.attacker_id === agentId) {
+                setBattlesList(prev => [lastBattleLogTable, ...prev])
+                dispatch(lastBattleLogTableAction(null))
+            }
+        }
+    },[battlesList, lastBattleLogTable, agentId])
 
+    
 
+  
+    
     return (    
         <Box mt="30px" maxW="1360px" ml="17px">            
             {/* <Box className="fx-row ai-ct jc-sb">
@@ -49,7 +61,7 @@ export const ExpandTable: React.FC<iExpandTable> = ({
                 border="1px solid #01FDB2"  
                 borderRadius="5px" 
                 mt="5px"
-                maxH="480px"
+                maxH="530px"
                 overflowY="scroll"
                 className="scrollable"
             >
@@ -87,45 +99,69 @@ export const ExpandTable: React.FC<iExpandTable> = ({
                         </tr>
                     </thead>
                     <TransitionGroup component="tbody">
-                        {list.map((item) => (
-                        <CSSTransition key={item.time} timeout={300} classNames="row">
-                            <tr className="tb_td_h">
-                            <td className="tb_bd1 fx-row center tb_td_h">
-                                <Image src={Kline3Img} h="20px" w="7px" />
-                                <Text className="gray9 fz14" ml="10px">
-                                {formatTimeAgo(item.time)}
-                                </Text>
-                            </td>
-                            <td className="tb_bd1">
-                                <Text className="gray9 fz14 center">{item.UTC}</Text>
-                            </td>
-                            <td className="tb_bd1">
-                                <Box className="fx-row ai-ct jc-sb">
-                                <Text className="white fz14 underline center" w="174px">
-                                    {item.attacker}
-                                </Text>
-                                <Text className="white fz14 underline center" w="174px">
-                                    {item.defender}
-                                </Text>
-                                </Box>
-                            </td>
-                            <td className="tb_bd1 w174" >
-                                <Text className="white fz14 underline center">{item.winner}</Text>
-                            </td>
-                            <td className="tb_bd1 w174">
-                                <Text className="white fz14 underline center">{item.loser}</Text>
-                            </td>
-                            <td className="tb_bd1 w174">
-                                <Text className="main fz14 center">{item.result}</Text>
-                            </td>
-                            <td className="tb_bd1">
-                                <Text className="white fz14 center">
-                                {item.battleDescription}
-                                </Text>
-                            </td>
-                            </tr>
-                        </CSSTransition>
-                        ))}
+                        {battlesList.map((item) => {
+                           
+                            const {attacker_id,
+                                created_at,
+                                defender_id,
+                                attacker,
+                                defender,
+                                description,
+                                id,
+                                outcome} = item
+                            const isWin = outcome.includes('VICTORY') 
+                         
+                        
+                            const _outcome  = outcome.toLowerCase().replace('_', ' ');
+                            return (
+                                <CSSTransition key={id} timeout={300} classNames="row">
+                                    <tr className="tb_td_h">
+                                    <td className="tb_bd1 fx-row center tb_td_h">
+                                        <Image src={Kline3Img} h="20px" w="7px" />
+                                        <Text className="gray9 fz14" ml="10px">
+                                        {createTimeAgo(created_at)}
+                                        </Text>
+                                    </td>
+                                    <td className="tb_bd1">
+                                        <Text className="gray9 fz14 center">{localDate2UTC(created_at)}</Text>
+                                    </td>
+                                    <td className="tb_bd1">
+                                        <Box className="fx-row ai-ct jc-sb">
+                                        <Text className="white fz14 underline center" w="174px">
+                                            {attacker.name}
+                                        </Text>
+                                        <Text className="white fz14 underline center" w="174px">
+                                            {defender.name}
+                                        </Text>
+                                        </Box>
+                                    </td>
+                                    <td className="tb_bd1 w174" >
+                                        <Text className="white fz14 underline center">{isWin ? attacker.name : defender.name }</Text>
+                                    </td>
+                                    <td className="tb_bd1 w174">
+                                        <Text className="white fz14 underline center">{isWin ? defender.name : attacker.name}</Text>
+                                    </td>
+                                    <td className="tb_bd1 w174">
+                                        <Text 
+                                            className="fz14 center"
+                                            color={ outcome.includes('VICTORY') ? "#01FDB2" : "#F45B5B" }
+                                        >{_outcome}</Text>
+                                    </td>
+                                    <td className="tb_bd1">
+                                    <TextPopover 
+                                        content={
+                                            <Text className="fz14 white" textAlign='start' dangerouslySetInnerHTML={{ __html: description }} />
+                                        }
+                                    >
+                                        <Text className="white fz14 center">
+                                            {`${description.substring(0,16)}...`}
+                                        </Text>
+                                    </TextPopover>
+                                    </td>
+                                    </tr>
+                                </CSSTransition>
+                            )
+                        })}
                     </TransitionGroup>
                 </table>
             </Box>

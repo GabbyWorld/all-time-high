@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { Flex, Image, Text, Box } from "@chakra-ui/react";
+import React, { useEffect, useState } from "react"
+import { Flex, Image, Text, Box } from "@chakra-ui/react"
 import { ClickButtonWrapper, GeneralButton, showToast } from '@/components'
 import { CopyImg, WalletImg } from "@/assets/images"
-import { connectWalletApi, profileApi } from '@/api'
-import { useWallet, } from '@solana/wallet-adapter-react';
+import { connectWalletApi } from '@/api'
+import { useWallet, } from '@solana/wallet-adapter-react'
 import { CopyToClipboard } from "react-copy-to-clipboard"
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js"
 import { keepDecimals } from '@/utils/math'
-import { useAppDispatch } from "@/redux/hooks";
-import { notificationInfoAction, walletInfoAction } from "@/redux/reducer";
+import { useAppDispatch } from "@/redux/hooks"
+import { notificationInfoAction, walletInfoAction } from "@/redux/reducer"
 
 interface iConnectWallet {
   

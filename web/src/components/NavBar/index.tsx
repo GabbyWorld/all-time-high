@@ -1,14 +1,13 @@
-import type { FC } from "react";
-import React, {useState, useEffect, useCallback } from "react";
-
-import { Box, Image, Text,  } from "@chakra-ui/react";
+import type { FC } from "react"
+import React, {useState } from "react"
+import { Box, Image, } from "@chakra-ui/react"
 import { GeneralButton, ConnectWallet, TextButton, HowItWorksModal, SystemPromptsModal }  from '@/components'
 import { LogoImg } from '@/assets/images'
-import { useNavigate } from "react-router-dom";
-import { profileApi, userAgentsApi } from "@/api";
-import { useAppDispatch } from "@/redux/hooks";
-import { myAgentsAction } from "@/redux/reducer";
-import { PAGE_MAX_WIDTH, PAGE_MIN_WIDTH } from "@/config";
+import { useNavigate } from "react-router-dom"
+import { userAgentsApi } from "@/api"
+import { useAppDispatch } from "@/redux/hooks"
+import { myAgentsAction } from "@/redux/reducer"
+import { PAGE_MAX_WIDTH } from "@/config"
 
 export const Navbar: FC = () => {
   const [isOpen, setOpen] = useState<boolean>(false)
@@ -22,11 +21,11 @@ export const Navbar: FC = () => {
   }
 
   const myAgent = async() => {
+    // navigate('/my-agent')
+    window.open('/my-agent', '_blank')
     // const a = await profileApi()
-    const b = await userAgentsApi()
-    if(b && b.agents) {
-      dispatch(myAgentsAction(b.agents.reverse()))
-    }
+
+    
   }
 
   const onLogo = () => {
@@ -51,7 +50,7 @@ export const Navbar: FC = () => {
       <Box className="fx-row ai-ct jc-sb w100" maxW='884px' minW='684px'>
         <Image src={LogoImg} h="80px" w="54.28px" className="click" onClick={onLogo}/>
         <GeneralButton title="create agent" onClick={createAgent} style={{  }}/>
-        <GeneralButton title="my agent" onClick={myAgent}/>
+        <GeneralButton title="my agents" onClick={myAgent}/>
         <TextButton
           title="how it works"
           onClick={() => setOpen(true)}
@@ -66,5 +65,5 @@ export const Navbar: FC = () => {
       <HowItWorksModal visible={isOpen} onClose={() => setOpen(false)} />
       <SystemPromptsModal visible={isSystemOpen} onClose={() => setSystemOpen(false)} />
     </Box>
-  );
-};
+  )
+}

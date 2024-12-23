@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import { Home } from '@/pages/'
 import { CreateAgent } from '@/pages/CreateAgent'
+import { MyAgent } from '@/pages/MyAgent'
 import { MainLayout } from '@/components/layout'
 import {BrowserRouter, Route, Routes } from "react-router-dom"
 import { ChakraProvider, extendTheme } from '@chakra-ui/react'
@@ -34,6 +35,7 @@ function App() {
                   <Routes>          
                     <Route path="/" element={<Home/>}/>               
                     <Route path="/create-agent" element={<CreateAgent/>}/>               
+                    <Route path="/my-agent" element={<MyAgent/>}/>               
                   </Routes>
                   <Leaderboard/>
                 </Box>
