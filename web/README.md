@@ -6,7 +6,7 @@ First, clone this project to your local machine:
 
 ```bash
 git clone https://github.com/GabbyWorld/all-time-high
-cd all-time-high
+cd all-time-high/web
 ```
 
 ### Install Dependencies
