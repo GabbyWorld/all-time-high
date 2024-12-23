@@ -20,6 +20,10 @@ export const allAgentsApi = (page: number, page_size: number) => {
     return get<{ agents: iAgentReturn[], page: number, page_size: number, total: number }>(`/agents/all`,{ page, page_size })
 }
 
+export const agent1Api = (id: number) => {
+    return get<iAgentReturn>(`/agent/${id}`)
+}
+
 export const battlesApi = (agent_id: number) => {
     return get<iBattlesReturn>(`/battles`,{ agent_id })
 }

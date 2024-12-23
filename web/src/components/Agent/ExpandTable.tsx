@@ -46,8 +46,9 @@ export const ExpandTable: React.FC<iExpandTable> = ({
     },[battlesList, lastBattleLogTable, agentId])
 
     
-
-  
+    const toItemDetail = (id: number) => {
+        window.open(`/agent-detail?id=${id}`,'_blank')
+    }
     
     return (    
         <Box mt="30px" maxW="1360px" ml="17px">            
@@ -127,19 +128,19 @@ export const ExpandTable: React.FC<iExpandTable> = ({
                                     </td>
                                     <td className="tb_bd1">
                                         <Box className="fx-row ai-ct jc-sb">
-                                        <Text className="white fz14 underline center" w="174px">
+                                        <Text className="white fz14 underline center click" w="174px" onClick={() => toItemDetail(attacker.id)}>
                                             {attacker.name}
                                         </Text>
-                                        <Text className="white fz14 underline center" w="174px">
+                                        <Text className="white fz14 underline center click" w="174px" onClick={() => toItemDetail(defender.id)}>
                                             {defender.name}
                                         </Text>
                                         </Box>
                                     </td>
                                     <td className="tb_bd1 w174" >
-                                        <Text className="white fz14 underline center">{isWin ? attacker.name : defender.name }</Text>
+                                        <Text className="white fz14 underline center click" onClick={() => toItemDetail(isWin ? attacker.id : defender.id )}>{isWin ? attacker.name : defender.name }</Text>
                                     </td>
                                     <td className="tb_bd1 w174">
-                                        <Text className="white fz14 underline center">{isWin ? defender.name : attacker.name}</Text>
+                                        <Text className="white fz14 underline center click" onClick={() => toItemDetail(isWin ? defender.id : attacker.id )}>{isWin ? defender.name : attacker.name}</Text>
                                     </td>
                                     <td className="tb_bd1 w174">
                                         <Text 

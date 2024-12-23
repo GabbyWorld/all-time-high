@@ -18,7 +18,6 @@ const wallets = [
 ]
 
 export const SOLProvider:FC<{children: React.ReactNode}> = ( { children }) => {
-    
     return (
         <Web3ReactProvider connectors={connections}>
             <ConnectionProvider endpoint={import.meta.env.VITE_ENDPOINT}> 
@@ -26,8 +25,6 @@ export const SOLProvider:FC<{children: React.ReactNode}> = ( { children }) => {
                     { children }    
                   </WalletProvider>
             </ConnectionProvider>
-      </Web3ReactProvider>
-
-              
+      </Web3ReactProvider>              
     )
 }

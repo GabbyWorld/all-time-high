@@ -18,12 +18,14 @@ interface iAgentItem  {
     selectedItem: number | null
     onExpand: (id: number, detail: iBattlesReturn) => void
     onCollapse: () => void
+    isAutoExpand?: boolean
 }
 export const AgentItem: FC<iAgentItem & iAgentReturn> = ({ 
     activeIdx,
     selectedItem = null,
     onExpand,
     onCollapse,
+    isAutoExpand,
     id,
     name,
     ticker,
@@ -53,6 +55,12 @@ export const AgentItem: FC<iAgentItem & iAgentReturn> = ({
     useEffect(() => {
         fetchLogs()
     },[])
+
+    useEffect(() => {
+        if(isAutoExpand) {
+            handleExpand()
+        }
+    },[isAutoExpand, battleStats])
 
     useEffect(() => {
         if(lastBattleLog) {
@@ -88,12 +96,24 @@ export const AgentItem: FC<iAgentItem & iAgentReturn> = ({
         }
     }
 
+    const handleExpand = () => {
+        onExpand(id, {
+            losses: battleStats.losses,
+            total: battleStats.total,
+            win_rate: battleStats.win_rate,
+            wins: battleStats.wins,
+            battles: allBattles
+        })
+    }
     const onBuy = (address: string) => {
         if(address) {
             window.open(`https://pump.fun/coin/${address}`, '_blank')
         }
     }
 
+    const toItemDetail = (id: number) => {
+        window.open(`/agent-detail?id=${id}`,'_blank')
+    }
 
     return (
         <CSSTransition classNames="fade" timeout={300}>
@@ -173,6 +193,8 @@ export const AgentItem: FC<iAgentItem & iAgentReturn> = ({
                                                 description,
                                                 id,
                                                 outcome} = item
+                                        const isWin = outcome.includes('VICTORY') 
+                                        
                                         return(
                                             <CSSTransition
                                                 key={id}
@@ -184,11 +206,12 @@ export const AgentItem: FC<iAgentItem & iAgentReturn> = ({
                                                     <span className="gray9">{createTimeAgo(created_at)}: </span>
                                                     <span
                                                         className="ml4 mr4"
-                                                        style={{ color: outcome.includes('VICTORY') ? "#01FDB2" : "#F45B5B" }}
+                                                        style={{ color: isWin? "#01FDB2" : "#F45B5B" }}
                                                         >
-                                                        {outcome.includes('VICTORY') ? "win" : "loss"}
+                                                        {isWin ? "win" : "loss"}
                                                     </span>
-                                                    <span className="white fw700 underline">vs {defender.name} </span>
+                                                    <span className="white fw700">vs</span>&nbsp;
+                                                    <span className="white fw700 underline click" onClick={() => toItemDetail(defender.id)}>{defender.name} </span>
                                                     <Image
                                                         src={defender.image_url}
                                                         w="17px"
@@ -202,40 +225,31 @@ export const AgentItem: FC<iAgentItem & iAgentReturn> = ({
                                     })}
                                 </TransitionGroup>
                             </Box>
-
-                            <Box 
-                                mt="130px"
-                                w="26px"
-                                ml="25px" 
-                                h="26px" 
-                                className="click center" 
-                                border="1px solid #01FDB2" 
-                                borderRadius="6px"
-                                _hover={{
-                                    backgroundColor: '#01553C',
-                                    border: '1px solid transparent',
-                                }}
-                                style={{
-                                    transform: selectedItem === null ? 'rotate(0deg)' : 'rotate(180deg)',
-                                    transition: 'transform 0.3s'
-                                }}
-                                onMouseOver={() => setOver(true)}
-                                onMouseLeave={() => setOver(false)}
-                                onClick={selectedItem ? 
-                                    () => onCollapse() : 
-                                    () => onExpand(id, {
-                                        losses: battleStats.losses,
-                                        total: battleStats.total,
-                                        win_rate: battleStats.win_rate,
-                                        wins: battleStats.wins,
-                                        battles: allBattles
-                                    })}
-
-                                    
-
-                            >
-                                <Image src={isOver ? ArrowWhiteImg : ArrowImg} h="7px" w='12px'/>
-                            </Box>
+                            {
+                                !!!isAutoExpand && 
+                                <Box 
+                                    mt="130px"
+                                    w="26px"
+                                    ml="25px" 
+                                    h="26px" 
+                                    className="click center" 
+                                    border="1px solid #01FDB2" 
+                                    borderRadius="6px"
+                                    _hover={{
+                                        backgroundColor: '#01553C',
+                                        border: '1px solid transparent',
+                                    }}
+                                    style={{
+                                        transform: selectedItem === null ? 'rotate(0deg)' : 'rotate(180deg)',
+                                        transition: 'transform 0.3s'
+                                    }}
+                                    onMouseOver={() => setOver(true)}
+                                    onMouseLeave={() => setOver(false)}
+                                    onClick={selectedItem ? onCollapse : handleExpand}
+                                >
+                                    <Image src={isOver ? ArrowWhiteImg : ArrowImg} h="7px" w='12px'/>
+                                </Box>
+                            }
                         </Box>
                     </Box>
                 </Box>

@@ -48,7 +48,7 @@ export const Navbar: FC = () => {
       bgColor='#16141F'> 
 
       <Box className="fx-row ai-ct jc-sb w100" maxW='884px' minW='684px'>
-        <Image src={LogoImg} h="80px" w="54.28px" className="click" onClick={onLogo}/>
+        <Image src={LogoImg} h="80px" className="click" onClick={onLogo}/>
         <GeneralButton title="create agent" onClick={createAgent} style={{  }}/>
         <GeneralButton title="my agents" onClick={myAgent}/>
         <TextButton

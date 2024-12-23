@@ -3,7 +3,7 @@ import { Agent } from '@/components'
 
 export const Home: FC = () => {
   return (  
-      <Agent/>          
+    <Agent/>
   )
 }
 
