@@ -1,0 +1,315 @@
+definitions:
+  errors.APIError:
+    properties:
+      code:
+        $ref: '#/definitions/errors.ErrorCode'
+      details:
+        type: string
+      message:
+        type: string
+    type: object
+  errors.ErrorCode:
+    enum:
+    - INVALID_REQUEST
+    - UNAUTHORIZED
+    - FORBIDDEN
+    - NOT_FOUND
+    - INTERNAL_ERROR
+    - DATABASE_ERROR
+    - VALIDATION_ERROR
+    - TOKEN_GENERATION_ERROR
+    - TOKEN_VERIFICATION_ERROR
+    type: string
+    x-enum-varnames:
+    - ErrInvalidRequest
+    - ErrUnauthorized
+    - ErrForbidden
+    - ErrNotFound
+    - ErrInternal
+    - ErrDatabase
+    - ErrValidation
+    - ErrTokenGeneration
+    - ErrTokenVerification
+  handlers.AgentRequest:
+    properties:
+      name:
+        maxLength: 100
+        type: string
+      prompt:
+        type: string
+      ticker:
+        maxLength: 50
+        type: string
+    required:
+    - name
+    - prompt
+    - ticker
+    type: object
+  handlers.AgentResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      prompt:
+        type: string
+      ticker:
+        type: string
+      token_address:
+        description: 新增字段
+        type: string
+    type: object
+  handlers.AgentsResponse:
+    properties:
+      agents:
+        items:
+          $ref: '#/definitions/handlers.AgentResponse'
+        type: array
+    type: object
+  handlers.ConnectWalletRequest:
+    properties:
+      username:
+        description: Username 用户名（可选）
+        maxLength: 50
+        type: string
+      wallet_address:
+        description: WalletAddress 用户的Phantom钱包地址
+        type: string
+    required:
+    - wallet_address
+    type: object
+  handlers.ConnectWalletResponse:
+    properties:
+      message:
+        description: Message 操作消息
+        type: string
+      token:
+        description: Token JWT令牌
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: User 用户信息
+    type: object
+  handlers.GetProfileResponse:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: User 用户信息
+    type: object
+  handlers.HealthCheckResponse:
+    properties:
+      status:
+        description: Status 服务状态
+        type: string
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+      username:
+        type: string
+      wallet_address:
+        type: string
+    type: object
+host: api-test.all-time-high.ai
+info:
+  contact:
+    email: support@yourwebsite.com
+    name: API Support
+    url: http://www.yourwebsite.com/support
+  description: 这是一个使用Go、Gin、Gorm和PostgreSQL构建的Web后端项目，支持通过Phantom钱包连接用户，并实现了JWT认证。
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://your-terms-of-service-url.com
+  title: Go Web Backend API
+  version: "1.0"
+paths:
+  /api/agent:
+    post:
+      consumes:
+      - application/json
+      description: 玩家输入name, ticker, prompt，后端生成description和图片，并保存数据。
+      parameters:
+      - description: Agent请求体
+        in: body
+        name: agent
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AgentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/handlers.AgentResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      security:
+      - BearerAuth: []
+      summary: 创建Agent
+      tags:
+      - Agent
+  /api/agents:
+    get:
+      description: 获取当前登录用户关联的所有Agent记录，并支持分页。
+      parameters:
+      - description: 页码(默认为1)
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小(默认为4)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功返回所有Agent(包含分页信息)
+          schema:
+            $ref: '#/definitions/handlers.AgentsResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      security:
+      - BearerAuth: []
+      summary: 获取登录用户的所有Agents（分页）
+      tags:
+      - Agent
+  /api/agents/all:
+    get:
+      description: 获取数据库中所有Agent记录，并支持分页。
+      parameters:
+      - description: 页码(默认为1)
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小(默认为4)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功返回所有Agent(包含分页信息)
+          schema:
+            $ref: '#/definitions/handlers.AgentsResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      security:
+      - BearerAuth: []
+      summary: 获取所有Agent（分页）
+      tags:
+      - Agent
+  /api/connect_wallet:
+    post:
+      consumes:
+      - application/json
+      description: 用户通过Phantom钱包连接到系统，创建或更新用户信息，并返回JWT令牌。
+      parameters:
+      - description: 用户连接Phantom钱包请求体
+        in: body
+        name: connect_wallet
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ConnectWalletRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户已连接
+          schema:
+            $ref: '#/definitions/handlers.ConnectWalletResponse'
+        "201":
+          description: 用户已创建
+          schema:
+            $ref: '#/definitions/handlers.ConnectWalletResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      summary: 连接Phantom钱包
+      tags:
+      - 用户
+  /api/health:
+    get:
+      consumes:
+      - application/json
+      description: 检查服务是否运行正常。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 服务正常
+          schema:
+            $ref: '#/definitions/handlers.HealthCheckResponse'
+      summary: 健康检查
+      tags:
+      - 健康检查
+  /api/profile:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前认证用户的详细资料。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户资料
+          schema:
+            $ref: '#/definitions/handlers.GetProfileResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      security:
+      - BearerAuth: []
+      summary: 获取用户资料
+      tags:
+      - 用户
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
