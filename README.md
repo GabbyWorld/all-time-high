@@ -30,7 +30,7 @@ Follow these steps to set up the project locally and dive into the Web3 world:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/GabbyWorld/all-time-high-backend.git
+   git clone https://github.com/dn2-life/all-time-high-backend.git
    cd all-time-high-backend
    ```
 
