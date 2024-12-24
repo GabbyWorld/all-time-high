@@ -5,7 +5,7 @@
 First, clone this project to your local machine:
 
 ```bash
-git clone https://github.com/GabbyWorld/all-time-high
+git clone https://github.com/dn2-life/all-time-high.git
 cd all-time-high/web
 ```
 
