@@ -94,6 +94,7 @@ type SolanaConfig struct {
 	IPFSURL          string `mapstructure:"SOLANA_IPFS_URL"`
 	TradeURL         string `mapstructure:"SOLANA_TRADE_URL"`
 	TokenProgramID   string `mapstructure:"SOLANA_TOKEN_PROGRAM_ID"`
+	MockCreateToken  bool   `mapstructure:"MOCK_CREATE_TOKEN"`
 }
 
 func LoadConfig() *Config {
@@ -135,7 +136,7 @@ func LoadConfig() *Config {
 	viper.SetDefault("SOLANA_IPFS_URL", "https://pump.fun/api/ipfs")
 	viper.SetDefault("SOLANA_TRADE_URL", "https://pumpportal.fun/api/trade-local")
 	viper.SetDefault("SOLANA_TOKEN_PROGRAM_ID", "6EF8rcorrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P")
-
+	viper.SetDefault("MOCK_CREATE_TOKEN", false)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println("No config file found, reading from environment variables")
 	}
@@ -206,6 +207,7 @@ func LoadConfig() *Config {
 			IPFSURL:          viper.GetString("SOLANA_IPFS_URL"),
 			TradeURL:         viper.GetString("SOLANA_TRADE_URL"),
 			TokenProgramID:   viper.GetString("SOLANA_TOKEN_PROGRAM_ID"),
+			MockCreateToken:  viper.GetBool("MOCK_CREATE_TOKEN"),
 		},
 	}
 

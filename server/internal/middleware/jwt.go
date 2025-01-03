@@ -49,7 +49,7 @@ func JWTAuthMiddleware(jwtManager *utils.JWTManager) gin.HandlerFunc {
 
 		// 将用户ID存储在上下文中，供后续处理器使用
 		c.Set("userID", claims.UserID)
-
+		c.Set("userWalletAddress", claims.UserWalletAddress)
 		c.Next()
 	}
 }

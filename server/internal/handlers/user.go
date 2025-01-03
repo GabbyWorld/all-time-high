@@ -4,9 +4,15 @@ package handlers
 import (
 	"net/http"
 
+	"encoding/base64"
+	"fmt"
+	"github.com/gagliardetto/solana-go"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/ed25519"
 	"gorm.io/gorm"
+	"sync"
+	"time"
 
 	"github.com/GabbyWorld/all-time-high-backend/internal/errors"
 	"github.com/GabbyWorld/all-time-high-backend/internal/logger"
@@ -21,11 +27,20 @@ type UserHandler struct {
 
 // ConnectWalletRequest 用户连接Phantom钱包的请求体
 type ConnectWalletRequest struct {
-	// WalletAddress 用户的Phantom钱包地址
+	// WalletAddress 即公钥（必填）
 	WalletAddress string `json:"wallet_address" binding:"required"`
 	// Username 用户名（可选）
 	Username string `json:"username" binding:"omitempty,max=50"`
+	// Signature 用户签名（必填）
+	Signature string `json:"signature" binding:"required"`
+	// Message 签名消息（必填，用于验证 nonce）
+	Message string `json:"message" binding:"required"`
 }
+
+var (
+	nonceStore = make(map[string]time.Time)
+	mutex      sync.Mutex
+)
 
 // ConnectWalletResponse 用户连接钱包的响应体
 type ConnectWalletResponse struct {
@@ -52,14 +67,70 @@ type ConnectWalletResponse struct {
 func (h *UserHandler) ConnectWallet(c *gin.Context) {
 	var req ConnectWalletRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		apiErr := errors.NewAPIError(errors.ErrValidation, "Request validation failed", err.Error())
+		apiErr := errors.NewAPIError(errors.ErrValidation, "请求参数验证失败", err.Error())
 		c.Error(apiErr)
 		logger.Logger.Error("ConnectWallet: validation failed", zap.Error(err))
 		return
 	}
 
+	// 1. 解码签名
+	signatureBytes, err := base64.StdEncoding.DecodeString(req.Signature)
+	if err != nil {
+		apiErr := errors.NewAPIError(errors.ErrValidation, "无效的签名编码", err.Error())
+		c.Error(apiErr)
+		logger.Logger.Error("ConnectWallet: invalid signature encoding", zap.Error(err))
+		return
+	}
+
+	// 2. 解析公钥
+	publicKey, err := solana.PublicKeyFromBase58(req.WalletAddress)
+	if err != nil {
+		apiErr := errors.NewAPIError(errors.ErrValidation, "无效的公钥格式", err.Error())
+		c.Error(apiErr)
+		logger.Logger.Error("ConnectWallet: invalid public key format", zap.Error(err))
+		return
+	}
+
+	// 3. 验证签名
+	valid := ed25519.Verify(publicKey.Bytes(), []byte(req.Message), signatureBytes)
+	if !valid {
+		apiErr := errors.NewAPIError(errors.ErrValidation, "签名验证失败")
+		c.Error(apiErr)
+		logger.Logger.Error("ConnectWallet: signature verification failed")
+		return
+	}
+
+	// 4. 若使用 Nonce，解析并验证 nonce（示例：从消息中提取）
+	var nonce string
+	_, err = fmt.Sscanf(req.Message, "Login request: %s", &nonce)
+	if err == nil && nonce != "" {
+		mutex.Lock()
+		timestamp, exists := nonceStore[nonce]
+		if exists {
+			// 检查 Nonce 是否在 5 分钟有效期内
+			if time.Since(timestamp) > 5*time.Minute {
+				delete(nonceStore, nonce)
+				mutex.Unlock()
+				apiErr := errors.NewAPIError(errors.ErrValidation, "Nonce 已过期")
+				c.Error(apiErr)
+				logger.Logger.Error("ConnectWallet: nonce expired")
+				return
+			}
+			// 验证通过后删除已使用的 Nonce
+			delete(nonceStore, nonce)
+		}
+		mutex.Unlock()
+
+		if !exists {
+			apiErr := errors.NewAPIError(errors.ErrValidation, "无效的 Nonce")
+			c.Error(apiErr)
+			logger.Logger.Error("ConnectWallet: invalid nonce")
+			return
+		}
+	}
+
+	// 签名及 nonce 验证通过后，继续原有逻辑
 	var user models.User
-	// 查找是否已有该钱包地址的用户
 	result := h.DB.Where("wallet_address = ?", req.WalletAddress).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -69,7 +140,7 @@ func (h *UserHandler) ConnectWallet(c *gin.Context) {
 				Username:      req.Username,
 			}
 			if err := h.DB.Create(&user).Error; err != nil {
-				apiErr := errors.NewAPIError(errors.ErrDatabase, "Failed to create user", err.Error())
+				apiErr := errors.NewAPIError(errors.ErrDatabase, "创建用户失败", err.Error())
 				c.Error(apiErr)
 				logger.Logger.Error("ConnectWallet: failed to create user", zap.Error(err))
 				return
@@ -77,7 +148,7 @@ func (h *UserHandler) ConnectWallet(c *gin.Context) {
 			// 生成JWT
 			token, err := h.JWTManager.GenerateToken(&user)
 			if err != nil {
-				apiErr := errors.NewAPIError(errors.ErrTokenGeneration, "Failed to generate token", err.Error())
+				apiErr := errors.NewAPIError(errors.ErrTokenGeneration, "生成 token 失败", err.Error())
 				c.Error(apiErr)
 				logger.Logger.Error("ConnectWallet: failed to generate token", zap.Error(err))
 				return
@@ -91,17 +162,17 @@ func (h *UserHandler) ConnectWallet(c *gin.Context) {
 			return
 		}
 		// 其他错误
-		apiErr := errors.NewAPIError(errors.ErrDatabase, "Database query error", result.Error.Error())
+		apiErr := errors.NewAPIError(errors.ErrDatabase, "数据库查询错误", result.Error.Error())
 		c.Error(apiErr)
 		logger.Logger.Error("ConnectWallet: database query error", zap.Error(result.Error))
 		return
 	}
 
-	// 更新用户名（如果提供）
+	// 如果提供了新的用户名则更新
 	if req.Username != "" && req.Username != user.Username {
 		user.Username = req.Username
 		if err := h.DB.Save(&user).Error; err != nil {
-			apiErr := errors.NewAPIError(errors.ErrDatabase, "Failed to update user", err.Error())
+			apiErr := errors.NewAPIError(errors.ErrDatabase, "更新用户失败", err.Error())
 			c.Error(apiErr)
 			logger.Logger.Error("ConnectWallet: failed to update user", zap.Error(err))
 			return
@@ -112,7 +183,7 @@ func (h *UserHandler) ConnectWallet(c *gin.Context) {
 	// 生成JWT
 	token, err := h.JWTManager.GenerateToken(&user)
 	if err != nil {
-		apiErr := errors.NewAPIError(errors.ErrTokenGeneration, "Failed to generate token", err.Error())
+		apiErr := errors.NewAPIError(errors.ErrTokenGeneration, "生成 token 失败", err.Error())
 		c.Error(apiErr)
 		logger.Logger.Error("ConnectWallet: failed to generate token", zap.Error(err))
 		return
@@ -180,4 +251,26 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, GetProfileResponse{
 		User: user,
 	})
+}
+
+// GenerateNonce godoc
+// @Summary 生成随机Nonce
+// @Description 生成一个随机的Nonce并存储到内存，返回给客户端（示例使用内存存储，实际可使用Redis等）
+// @Tags 用户
+// @Produce json
+// @Success 200 {object} map[string]string "返回一个包含nonce字段的JSON对象"
+// @Router /api/generate_nonce [get]
+func (h *UserHandler) GenerateNonce(c *gin.Context) {
+	nonce := generateRandomNonce()
+	mutex.Lock()
+	nonceStore[nonce] = time.Now()
+	mutex.Unlock()
+
+	c.JSON(http.StatusOK, gin.H{
+		"nonce": nonce,
+	})
+}
+
+func generateRandomNonce() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
 }

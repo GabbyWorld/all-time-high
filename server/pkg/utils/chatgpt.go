@@ -106,15 +106,18 @@ func GenerateBattleOutcome(apiKey, endpoint, attName, attPrompt, defName, defPro
 																- Attacker Agent Prompt: %s
 																- Defender Agent Name: %s
 																- Defender Agent Prompt: %s
-																1. Begin by stating the Attack Outcome:
-																	- “Total Victory!” if the Attacker's abilities significantly outmatch the Defender's.
-																	- “Narrow Victory!” if the Attacker has a slight edge.
-																	- “Narrow Defeat!” if the Defender has a slight edge.
-																	- “Crushing Defeat!” if the Defender's abilities significantly outmatch the Attacker's.
-																2. Craft a story under 280 characters, reflecting the battle and its outcome.
-																	- Mention both agents' names to make the narrative engaging.
+
+																Output Instructions:
+																Begin by stating the Attack Outcome:
+																	- “Total Victory!” for clear domination by the Attacker.
+																	- “Narrow Victory!” for a slight edge to the Attacker.
+																	- “Narrow Defeat!” for a slight edge to the Defender.
+																	- “Crushing Defeat!” for clear domination by the Defender.
+																Craft a story under 280 characters, reflecting the battle and its outcome.
+																	- Mention both names but base the narrative entirely on the interaction of abilities.
 																	- Avoid directly describing their abilities; focus on the imaginative depiction of how the battle unfolded.
-																	- Ensure the story aligns with the logical implications of their abilities interacting (without bias from agent names).
+																	- Avoid assumptions or biases based on names; rely only on logical implications of abilities.
+																	- Ensure the outcome aligns with how one ability counters, overpowers, or is neutralized by another.
 																`, attName, attPrompt, defName, defPrompt),
 			},
 		},

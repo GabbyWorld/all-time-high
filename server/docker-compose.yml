@@ -9,7 +9,9 @@ services:
     env_file:
       - .env
     environment:
-      LOG_FILE: /dev/stdout # 覆盖日志文件路径为标准输出
+      # 指定 LOG_FILE 环境变量到容器路径
+      LOG_FILE: /var/log/all-time-high-backend/app.log
     volumes:
-      - ./logs:/var/log/all-time-high-backend
+      # 挂载宿主机 logs 目录到容器
+      - /home/ubuntu/all-time-high-test/logs:/var/log/all-time-high-backend
     restart: always

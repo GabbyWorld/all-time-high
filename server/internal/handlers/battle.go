@@ -31,7 +31,6 @@ func NewBattleService(db *gorm.DB, wsHandler *BattleWebSocketHandler, config *co
 
 func (s *BattleService) StartPriceMonitoring() {
 	ticker := time.NewTicker(5 * time.Minute)
-	// ticker := time.NewTicker(15 * time.Minute)
 	go func() {
 		for range ticker.C {
 			logger.Logger.Info("Checking prices and triggering battles")
@@ -47,23 +46,46 @@ func (s *BattleService) checkPricesAndTriggerBattles() {
 		return
 	}
 
+	// 收集所有 TokenAddress 并批量获取相对于 SOL 的价格
+	tokenAddresses := make([]string, len(agents))
+	for i, agent := range agents {
+		tokenAddresses[i] = agent.TokenAddress
+	}
+
+	prices, err := utils.GetMultipleTokenVsSOLPrice(tokenAddresses)
+	if err != nil {
+		logger.Logger.Error("Failed to get multiple token prices", zap.Error(err))
+		return
+	}
+
 	for _, agent := range agents {
-		price, err := utils.GetTokenPrice(agent.TokenAddress)
-		if err != nil {
-			logger.Logger.Error("Failed to get token price",
-				zap.String("agentId", strconv.FormatUint(uint64(agent.ID), 10)),
-				zap.Error(err))
+		price, ok := prices[agent.TokenAddress]
+		if !ok {
+			logger.Logger.Error("Price not found for token",
+				zap.String("tokenAddress", agent.TokenAddress),
+				zap.String("agentId", strconv.FormatUint(uint64(agent.ID), 10)))
 			continue
 		}
 
-		if price > agent.HighestPrice {
-			agent.HighestPrice = price
+		// 如果 PreviousPrice 为 0，表示第一次获取价格，直接更新
+		if agent.PreviousPrice == 0 {
+			agent.PreviousPrice = price
 			if err := s.db.Save(&agent).Error; err != nil {
-				logger.Logger.Error("Failed to update agent", zap.Error(err))
+				logger.Logger.Error("Failed to update agent's previous price", zap.Error(err))
 			}
-			if agent.HighestPrice > 0 { // Only trigger battle if it's not the first price record
-				s.triggerBattle(agent)
-			}
+			continue
+		}
+
+		// 比较当前价格与 PreviousPrice
+		if price > agent.PreviousPrice {
+			// 当前价格高于5分钟前的价格，触发战斗
+			s.triggerBattle(agent)
+		}
+
+		// 更新 PreviousPrice 为当前价格
+		agent.PreviousPrice = price
+		if err := s.db.Save(&agent).Error; err != nil {
+			logger.Logger.Error("Failed to update agent's previous price", zap.Error(err))
 		}
 	}
 }
@@ -105,6 +127,13 @@ func (s *BattleService) triggerBattle(attacker models.Agent) {
 		outcome = "NARROW_VICTORY" // Default case
 	}
 
+	// Clean up battleDesc by removing content before newlines
+	if idx := strings.Index(battleDesc, "\n\n"); idx != -1 {
+		battleDesc = battleDesc[idx+2:]
+	} else if idx := strings.Index(battleDesc, "\n"); idx != -1 {
+		battleDesc = battleDesc[idx+1:]
+	}
+
 	// Create battle result
 	battle := models.Battle{
 		AttackerID:  attacker.ID,
@@ -120,6 +149,9 @@ func (s *BattleService) triggerBattle(attacker models.Agent) {
 		logger.Logger.Error("Failed to create battle", zap.Error(err))
 		return
 	}
+
+	//update agent stats
+	s.updateAgentStats(&attacker, &defender, outcome)
 
 	if err := s.db.Preload("Attacker").Preload("Defender").First(&battle, battle.ID).Error; err != nil {
 		logger.Logger.Error("Failed to retrieve created battle", zap.Error(err))
@@ -153,44 +185,63 @@ func (s *BattleService) GetBattles(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid agent_id"})
 		return
 	}
+
+	// get specified agent, including stats
+	var agent models.Agent
+	if err := s.db.First(&agent, agentID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Agent not found"})
+		return
+	}
+
+	// get all battles related to this agent
 	var battles []models.Battle
-	if err := s.db.Preload("Attacker").Preload("Defender").Where("attacker_id = ? OR defender_id = ?", agentID, agentID).Order("created_at desc").Find(&battles).Error; err != nil {
+	if err := s.db.Preload("Attacker").Preload("Defender").
+		Where("attacker_id = ? OR defender_id = ?", agentID, agentID).
+		Order("created_at desc").
+		Find(&battles).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch battles"})
 		return
 	}
 
-	// Calculate statistics
-	totalBattles := len(battles)
-	winCount := 0
-	loseCount := 0
-
-	for _, battle := range battles {
-		if battle.Outcome == "TOTAL_VICTORY" || battle.Outcome == "NARROW_VICTORY" {
-			if battle.AttackerID == uint(agentID) {
-				winCount++
-			} else {
-				loseCount++
-			}
-		} else {
-			if battle.AttackerID == uint(agentID) {
-				loseCount++
-			} else {
-				winCount++
-			}
-		}
-	}
-
-	winRate := 0.0
-	if totalBattles > 0 {
-		winRate = float64(winCount) / float64(totalBattles) * 100
-	}
-
-	// Return battles and statistics
+	// return battle records and stats
 	c.JSON(http.StatusOK, gin.H{
 		"battles":  battles,
-		"total":    totalBattles,
-		"wins":     winCount,
-		"losses":   loseCount,
-		"win_rate": winRate,
+		"total":    agent.Total,
+		"wins":     agent.Wins,
+		"losses":   agent.Losses,
+		"win_rate": agent.WinRate,
 	})
+}
+
+func (s *BattleService) updateAgentStats(attacker *models.Agent, defender *models.Agent, outcome string) {
+	// update total battles
+	attacker.Total++
+	defender.Total++
+
+	switch outcome {
+	case "TOTAL_VICTORY", "NARROW_VICTORY":
+		// attacker wins
+		attacker.Wins++
+		defender.Losses++
+	case "CRUSHING_DEFEAT", "NARROW_DEFEAT":
+		// defender wins
+		attacker.Losses++
+		defender.Wins++
+	}
+
+	// calculate win rate
+	if attacker.Total > 0 {
+		attacker.WinRate = float64(attacker.Wins) / float64(attacker.Total) * 100
+	}
+	if defender.Total > 0 {
+		defender.WinRate = float64(defender.Wins) / float64(defender.Total) * 100
+	}
+
+	// save updated agent
+	if err := s.db.Save(attacker).Error; err != nil {
+		logger.Logger.Error("Failed to update attacker stats", zap.Error(err))
+	}
+	if err := s.db.Save(defender).Error; err != nil {
+		logger.Logger.Error("Failed to update defender stats", zap.Error(err))
+	}
 }

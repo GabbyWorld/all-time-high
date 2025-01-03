@@ -81,6 +81,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/agent/{id}": {
+            "get": {
+                "description": "根据 Agent ID 获取对应的 Agent 信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agent"
+                ],
+                "summary": "获取指定 ID 的 Agent",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Agent ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功返回 Agent",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AgentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "未找到",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/agents": {
             "get": {
                 "security": [
@@ -134,11 +187,6 @@ const docTemplate = `{
         },
         "/api/agents/all": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "获取数据库中所有Agent记录，并支持分页。",
                 "produces": [
                     "application/json"
@@ -252,6 +300,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/leaderboard": {
+            "get": {
+                "description": "获取按照胜利次数、胜率和创建时间排序的前100名 Agent",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agent"
+                ],
+                "summary": "获取排行榜",
+                "responses": {
+                    "200": {
+                        "description": "成功返回排行榜",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LeaderboardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/nonce": {
+            "get": {
+                "description": "生成一个随机的Nonce并存储到内存，返回给客户端（示例使用内存存储，实际可使用Redis等）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "生成随机Nonce",
+                "responses": {
+                    "200": {
+                        "description": "返回一个包含nonce字段的JSON对象",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/profile": {
             "get": {
                 "security": [
@@ -333,6 +430,38 @@ const docTemplate = `{
                 "ErrTokenVerification"
             ]
         },
+        "handlers.AgentInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "market_cap": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ticker": {
+                    "type": "string"
+                },
+                "win_rate": {
+                    "type": "number"
+                },
+                "wins": {
+                    "type": "integer"
+                }
+            }
+        },
         "handlers.AgentRequest": {
             "type": "object",
             "required": [
@@ -369,6 +498,13 @@ const docTemplate = `{
                 "image_url": {
                     "type": "string"
                 },
+                "losses": {
+                    "description": "新增",
+                    "type": "integer"
+                },
+                "market_cap": {
+                    "type": "number"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -379,8 +515,22 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "token_address": {
-                    "description": "新增字段",
                     "type": "string"
+                },
+                "total": {
+                    "description": "新增",
+                    "type": "integer"
+                },
+                "user_wallet_address": {
+                    "type": "string"
+                },
+                "win_rate": {
+                    "description": "新增",
+                    "type": "number"
+                },
+                "wins": {
+                    "description": "新增",
+                    "type": "integer"
                 }
             }
         },
@@ -398,16 +548,26 @@ const docTemplate = `{
         "handlers.ConnectWalletRequest": {
             "type": "object",
             "required": [
+                "message",
+                "signature",
                 "wallet_address"
             ],
             "properties": {
+                "message": {
+                    "description": "Message 签名消息（必填，用于验证 nonce）",
+                    "type": "string"
+                },
+                "signature": {
+                    "description": "Signature 用户签名（必填）",
+                    "type": "string"
+                },
                 "username": {
                     "description": "Username 用户名（可选）",
                     "type": "string",
                     "maxLength": 50
                 },
                 "wallet_address": {
-                    "description": "WalletAddress 用户的Phantom钱包地址",
+                    "description": "WalletAddress 即公钥（必填）",
                     "type": "string"
                 }
             }
@@ -455,6 +615,17 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.LeaderboardResponse": {
+            "type": "object",
+            "properties": {
+                "leaderboard": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AgentInfo"
+                    }
+                }
+            }
+        },
         "models.User": {
             "type": "object",
             "properties": {
@@ -488,7 +659,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "api-test.all-time-high.ai",
+	Host:             "localhost:9100",
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Go Web Backend API",

@@ -25,14 +25,16 @@ func NewJWTManager(secret string, expiry string) (*JWTManager, error) {
 }
 
 type Claims struct {
-	UserID uint `json:"user_id"`
+	UserID            uint   `json:"user_id"`
+	UserWalletAddress string `json:"user_wallet_address"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken生成JWT
 func (j *JWTManager) GenerateToken(user *models.User) (string, error) {
 	claims := &Claims{
-		UserID: user.ID,
+		UserID:            user.ID,
+		UserWalletAddress: user.WalletAddress,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.tokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

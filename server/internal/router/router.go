@@ -66,10 +66,17 @@ func SetupRouter(db *gorm.DB, jwtManager *utils.JWTManager, cfg *config.Config) 
 		// 健康检查路由
 		api.GET("/health", handlers.HealthCheck)
 		api.POST("/connect_wallet", userHandler.ConnectWallet)
+		api.GET("/agents/all", agentHandler.GetAllAgents)
+		api.GET("/battles", battleService.GetBattles)
+		api.GET("/agent/:id", agentHandler.GetAgentByID)
+		api.GET("/generate_nonce", userHandler.GenerateNonce)
 
+		// WebSocket路由（无需JWT认证，示例可根据需要调整认证逻辑）
+		// WebSocket路由（无需JWT认证，示例可根据需要调整认证逻辑）
 		// WebSocket路由（无需JWT认证，示例可根据需要调整认证逻辑）
 		api.GET("/ws/agents", agentWSHandler.HandleAgentWebSocket)
 		api.GET("/ws/battle", battleWSHandler.HandleBattleWebSocket)
+		api.GET("/leaderboard", agentHandler.GetLeaderboard)
 
 		// 受保护的路由组
 		protected := api.Group("/")
@@ -78,9 +85,7 @@ func SetupRouter(db *gorm.DB, jwtManager *utils.JWTManager, cfg *config.Config) 
 			protected.GET("/profile", userHandler.GetProfile)
 			protected.POST("/agent", agentHandler.CreateAgent)   // 新增Agent路由
 			protected.GET("/agents", agentHandler.GetUserAgents) // 新增Agent查询路由
-			protected.GET("/agents/all", agentHandler.GetAllAgents)
 			protected.GET("/battle", battleService.GetBattle)
-			protected.GET("/battles", battleService.GetBattles)
 		}
 	}
 

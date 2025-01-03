@@ -5,11 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"mime/multipart"
-	"net/http"
-	"time"
-
 	"github.com/GabbyWorld/all-time-high-backend/internal/config"
 	"github.com/GabbyWorld/all-time-high-backend/internal/logger"
 	"github.com/gagliardetto/solana-go"
@@ -17,6 +12,10 @@ import (
 	confirm "github.com/gagliardetto/solana-go/rpc/sendAndConfirmTransaction"
 	"github.com/gagliardetto/solana-go/rpc/ws"
 	"go.uber.org/zap"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"strings"
 )
 
 // MetadataResponse 定义IPFS响应结构
@@ -30,7 +29,7 @@ type MetadataResponse struct {
 }
 
 // CreateToken 创建Token并返回签名
-func CreateToken(cfg *config.Config, imageURL string) (solana.Signature, error) {
+func CreateToken(cfg *config.Config, imageURL, agentName, agentTicker, agentDescription string) (solana.Signature, error) {
 	// 设置RPC端点
 	clientRPC := rpc.New(cfg.Solana.RPCEndpoint)
 	wsClient, err := ws.Connect(context.TODO(), cfg.Solana.WSRPCEndpoint)
@@ -91,17 +90,16 @@ func CreateToken(cfg *config.Config, imageURL string) (solana.Signature, error) 
 		return solana.Signature{}, fmt.Errorf("failed to write image data to form file: %w", err)
 	}
 
-	// 添加其他表单字段
+	// 添加其他表单字段，将 Agent 的信息对应到 "name"、"symbol"、"description"
 	fields := map[string]string{
-		"name":        "overdosed2",
-		"symbol":      "OVD2",
-		"description": "This is an example token created via PumpPortal.fun",
+		"name":        agentName,
+		"symbol":      agentTicker,
+		"description": agentDescription,
 		"twitter":     "",
 		"telegram":    "",
 		"website":     "",
 		"showName":    "true",
 	}
-
 	for key, val := range fields {
 		if err := writer.WriteField(key, val); err != nil {
 			logger.Logger.Error("CreateToken: failed to write form field", zap.String("field", key), zap.Error(err))
@@ -179,24 +177,23 @@ func CreateToken(cfg *config.Config, imageURL string) (solana.Signature, error) 
 	}
 	defer tradeResp.Body.Close()
 
-	// 读取响应体
 	bodyBytes, err := io.ReadAll(tradeResp.Body)
 	if err != nil {
 		logger.Logger.Error("CreateToken: failed to read trade response body", zap.Error(err))
 		return solana.Signature{}, fmt.Errorf("failed to read trade response body: %w", err)
 	}
 
-	// 输出响应内容类型和长度
 	contentType := tradeResp.Header.Get("Content-Type")
-	logger.Logger.Info("CreateToken: trade response received", zap.String("content_type", contentType), zap.Int("body_length", len(bodyBytes)))
+	logger.Logger.Info("CreateToken: trade response received",
+		zap.String("content_type", contentType),
+		zap.Int("body_length", len(bodyBytes)),
+	)
 
-	// 检查响应是否成功
 	if tradeResp.StatusCode != http.StatusOK {
 		logger.Logger.Error("CreateToken: trade request failed", zap.String("status", tradeResp.Status), zap.String("body", string(bodyBytes)))
 		return solana.Signature{}, fmt.Errorf("trade request failed, status: %s", tradeResp.Status)
 	}
 
-	// 将响应体解析为交易对象
 	tx, err := solana.TransactionFromBytes(bodyBytes)
 	if err != nil {
 		logger.Logger.Error("CreateToken: failed to parse transaction from response", zap.Error(err))
@@ -226,14 +223,18 @@ func CreateToken(cfg *config.Config, imageURL string) (solana.Signature, error) 
 	}
 
 	// 发送并确认交易
-	sig, err := confirm.SendAndConfirmTransactionWithTimeout(
+	sig, err := confirm.SendAndConfirmTransaction(
 		context.TODO(),
 		clientRPC,
 		wsClient,
 		tx,
-		time.Second*90,
 	)
 	if err != nil {
+		// 检查错误信息中是否包含“insufficient lamports”
+		if strings.Contains(err.Error(), "insufficient lamports") {
+			logger.Logger.Error("CreateToken: insufficient lamports", zap.Error(err))
+			return solana.Signature{}, fmt.Errorf("sorry our daily agent creation limit is reached, please try again tomorrow")
+		}
 		logger.Logger.Error("CreateToken: failed to send and confirm transaction", zap.Error(err))
 		return solana.Signature{}, fmt.Errorf("failed to send and confirm transaction: %w", err)
 	}

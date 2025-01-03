@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/GabbyWorld/all-time-high-backend/internal/config"
-	"github.com/GabbyWorld/all-time-high-backend/internal/models"
 	"github.com/GabbyWorld/all-time-high-backend/pkg/utils"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
@@ -91,10 +90,10 @@ func NewRepository(cfg *config.Config) (*Repository, error) {
 
 	// 自动迁移模型
 	err = db.AutoMigrate(
-		// 在此处列出需要迁移的模型，如：
-		&models.User{},
-		&models.Agent{}, // 添加Agent模型
-		&models.Battle{},
+	// 在此处列出需要迁移的模型，如：
+	// &models.User{},
+	// &models.Agent{}, // 添加Agent模型
+	// &models.Battle{},
 	)
 	if err != nil {
 		return nil, err

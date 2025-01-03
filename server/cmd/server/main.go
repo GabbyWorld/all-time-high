@@ -12,7 +12,7 @@
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host api-test.all-time-high.ai
+// @host localhost:9100
 
 // @securityDefinitions.apikey BearerAuth
 // @in header
@@ -28,10 +28,12 @@ import (
 	_ "github.com/GabbyWorld/all-time-high-backend/docs" // 导入生成的Swagger文档
 	"github.com/GabbyWorld/all-time-high-backend/internal/config"
 	"github.com/GabbyWorld/all-time-high-backend/internal/logger"
+	// "github.com/GabbyWorld/all-time-high-backend/internal/models"
 	"github.com/GabbyWorld/all-time-high-backend/internal/repository"
 	"github.com/GabbyWorld/all-time-high-backend/internal/router"
 	"github.com/GabbyWorld/all-time-high-backend/pkg/utils"
 	"github.com/joho/godotenv"
+	// "gorm.io/gorm"
 )
 
 // main 是应用程序的入口点
@@ -62,6 +64,11 @@ func main() {
 		logger.Logger.Fatal("Could not connect to the database", zap.Error(err))
 	}
 
+	// 更新代理统计数据
+	// if err := updateAgentStatistics(repo.DB); err != nil {
+	// 	log.Fatalf("Failed to update agent statistics: %v", err)
+	// }
+
 	// 初始化JWTManager
 	jwtManager, err := utils.NewJWTManager(cfg.JWT.Secret, cfg.JWT.Expiration)
 	if err != nil {
@@ -79,3 +86,61 @@ func main() {
 		logger.Logger.Fatal("Could not run the server", zap.Error(err))
 	}
 }
+
+// func updateAgentStatistics(db *gorm.DB) error {
+// 	var agents []models.Agent
+// 	if err := db.Find(&agents).Error; err != nil {
+// 		return err
+// 	}
+
+// 	for _, agent := range agents {
+// 		var total int64
+// 		var wins int64
+// 		var losses int64
+
+// 		// 获取该代理参与的所有战斗，作为攻击者或防御者
+// 		var battles []models.Battle
+// 		if err := db.Where("attacker_id = ? OR defender_id = ?", agent.ID, agent.ID).Find(&battles).Error; err != nil {
+// 			return err
+// 		}
+
+// 		total = int64(len(battles))
+
+// 		// 计算胜利和失败次数
+// 		for _, battle := range battles {
+// 			if battle.AttackerID == agent.ID {
+// 				// 作为攻击者
+// 				if battle.Outcome == "TOTAL_VICTORY" || battle.Outcome == "NARROW_VICTORY" {
+// 					wins++
+// 				} else {
+// 					losses++
+// 				}
+// 			} else if battle.DefenderID == agent.ID {
+// 				// 作为防御者
+// 				if battle.Outcome == "CRUSHING_DEFEAT" || battle.Outcome == "NARROW_DEFEAT" {
+// 					wins++
+// 				} else {
+// 					losses++
+// 				}
+// 			}
+// 		}
+
+// 		// 计算胜率
+// 		var winRate float64
+// 		if total > 0 {
+// 			winRate = float64(wins) / float64(total) * 100
+// 		}
+
+// 		// 更新代理的统计数据
+// 		agent.Total = int(total)
+// 		agent.Wins = int(wins)
+// 		agent.Losses = int(losses)
+// 		agent.WinRate = winRate
+
+// 		// 保存更新
+// 		if err := db.Save(&agent).Error; err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
